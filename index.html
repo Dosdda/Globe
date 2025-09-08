@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Globe</title>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // lighing to make the globe look less like a blue circle
+        const light = new THREE.PointLight(0xffffff, 1, 100);
+        light.position.set(10, 10, 10);
+        scene.add(light);
+
+        // Create a sphere (globe)
+        const geometry = new THREE.SphereGeometry(5, 32, 32);
+        const material = new THREE.MeshStandardMaterial({ color: 0x0077ff }); // to give the material lighting
+        const globe = new THREE.Mesh(geometry, material);
+        scene.add(globe); // dont ever forget this ever again....
+
+        // globe o
+        globe.position.y = 2;
+
+        // Satelite's
+        const sateliteGeometry = new THREE.BufferGeometry();
+        const sateliteTexture = new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/circle.png');
+        const sateliteMaterial = new THREE.PointsMaterial({
+            map: sateliteTexture,
+            color: 0xffffff,
+            size: 0.05, // Smaller size
+            transparent: true
+        });
+        // idk what this shit does ngl. Live,laugh,love AI
+        const particles = [];
+        const particleCount = 9000;
+        for (let i = 0; i < particleCount; i++) {
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos((Math.random() * 2) - 1);
+            const x = 5.2 * Math.sin(phi) * Math.cos(theta); // to position the particles slightly above the globe
+            const y = 5.2 * Math.sin(phi) * Math.sin(theta) + 2; // Shift particles upwards
+            const z = 5.2 * Math.cos(phi);
+            particles.push(x, y, z);
+        }
+
+        sateliteGeometry.setAttribute('position', new THREE.Float32BufferAttribute(particles, 3));
+        const cloudParticles = new THREE.Points(sateliteGeometry, sateliteMaterial);
+        scene.add(cloudParticles);
+
+        // Camera compensation positiong (CCP)
+        camera.position.x = 1
+        camera.position.y = 3;
+        camera.position.z = 15;
+
+        // Animation loopity loops
+        function animate() {
+            requestAnimationFrame(animate);
+            globe.rotation.y += 0.01; // Rotate the globe
+            cloudParticles.rotation.y += 0.005; // Rotate the clouds
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // window resize handler
+        window.addEventListener('resize', () => {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+        });
+
+        // button to toggle wireframe
+        const button = document.createElement('button');
+        button.textContent = 'Toggle Wireframe';
+        button.style.position = 'absolute';
+        button.style.top = '10px';
+        button.style.left = '10px';
+        button.style.color = 'green';
+        document.body.appendChild(button);
+
+        button.addEventListener('click', () => {
+            material.wireframe = !material.wireframe; //onclcik will toggle wireframe on and off
+        });
+    </script>
+</body>
+</html>
